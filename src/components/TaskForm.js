@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import * as actions from '../actions/index';
 // import logo from './logo.svg';
 // import './App.css';
 
@@ -17,12 +19,14 @@ class TaskForm extends Component {
     }
 
     componentWillMount(){
-      if(this.props.tasksEditting){
+      if(this.props.tasksEditting && this.props.tasksEditting.id !== null){
         this.setState({
           id : this.props.tasksEditting.id,
           name : this.props.tasksEditting.name,
           status : this.props.tasksEditting.status
         })
+      }else{
+        this.onClear();
       }
     }
 
@@ -33,13 +37,8 @@ class TaskForm extends Component {
           name : nextProps.tasksEditting.name,
           status : nextProps.tasksEditting.status
         })
-      }else if(nextProps && !nextProps.tasksEditting){
-        this.setState ( {
-          id : '',
-          name : '',
-          status: false,
-
-        });
+      }else{
+        this.onClear();
       }
     }
 
@@ -55,7 +54,7 @@ class TaskForm extends Component {
         var value = target.value;
         if(name === 'status')
         {
-            value = target.value ==='true' ? true : false;
+            value = target.value === 'true' ? true : false;
         }
         this.setState({
             [name] : value 
@@ -63,21 +62,22 @@ class TaskForm extends Component {
     }
 
     onSubmit(event){
-        event.preventDefault();
-        this.props.onSubmit(this.state)
+        event.preventDefault(); 
+        this.props.onAddTask(this.state)
         this.onClear();
         this.onCloseForm();
     }
 
     onClear = () =>{
         this.setState({
-            name: '',
-            status: false
+            name : '',
+            status : false
         })
     }
 
   render() {
     var {id} = this.state;
+    if(!this.props.isDisplayForm) return ''
     return (
       <div className="TaskForm">
         <div className="card text-left">
@@ -106,8 +106,8 @@ class TaskForm extends Component {
                   </select>
                 </div>
                 <div className="form-group">
-                  <button type = "submit" className="btn btn-warning mr-2 mb-1"><i className="fa fa-save"></i>Lưu lại</button>
-                  <button type = "submit" className="btn btn-danger" onClick = {this.onClear}><i className="fa fa-cancle"></i>Hủy bỏ</button >
+                  <button type = "submit" className="btn btn-warning mr-2 mb-1"><i className="fa fa-save mr-2"></i>Lưu lại</button>
+                  <button type = "button" className="btn btn-danger" onClick = {this.onClear}><i className="fa fa-close"></i>Hủy bỏ</button >
                 </div>
               </form>
             </div>
@@ -117,4 +117,22 @@ class TaskForm extends Component {
   }
 }
 
-export default TaskForm;
+const mapStateToProps = state =>{
+  return {
+    isDisplayForm : state.isDisplayForm,
+    tasksEditting : state.itemEditting
+  }
+}
+
+const mapDispatchToProps = (dispatch, props) => {
+  return {
+      onAddTask : (task) => {
+        dispatch(actions.addTask(task))
+      },
+      onCloseForm : () => {
+        dispatch(actions.closeForm());
+      }
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(TaskForm);
